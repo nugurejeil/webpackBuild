@@ -1,8 +1,12 @@
 const path = require('path'); // node.js path 모듈을 불러옵니다. 운영체제별로 상이한 경로 문법(구분자 : / 혹은 \)를 해결해 절대 경로로 반환하는 역할을 합니다.
 const webpack = require('webpack');
+const childProcess = require('child_process');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+
 
 module.exports = {
-    mode: 'development',
+    mode: process.env.NODE_ENV === 'development' ? 'development' : 'production',
     entry: {
         main: path.resolve('./src/app.js')
     },
@@ -43,7 +47,20 @@ module.exports = {
     },
     plugins: [
         new webpack.BannerPlugin({
-            banner: '배너입니다!! 마지막 빌드 시간은 ' + new Date().toLocaleString() + ' 입니다.'
-        })
+            banner: `
+            Commit version : ${childProcess.execSync('git rev-parse --short HEAD')}
+            Committer : ${childProcess.execSync('git config user.name')}
+            Commit Date : ${new Date().toLocaleString()}
+            `
+        }),
+        new webpack.DefinePlugin({
+            pw: 123456,
+            dev: JSON.stringify('https://dev.api.com'),
+            pro: JSON.stringify('https://pro.api.com')
+        }),
+        new HtmlWebpackPlugin({
+            template: './src/index.html', // 목표 html 파일의 위치입니다.
+        }),
+        new CleanWebpackPlugin()
     ]
 };
